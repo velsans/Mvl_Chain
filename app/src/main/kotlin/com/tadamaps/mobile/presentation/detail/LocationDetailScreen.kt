@@ -18,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.tadamaps.mobile.R
 import com.mvlchain.domain.model.LocationSlot
+import com.tadamaps.mobile.presentation.common.CommonErrorDialog
 import com.tadamaps.mobile.presentation.map.MapViewModel
 import com.tadamaps.mobile.presentation.navigation.Routes
 import com.tadamaps.mobile.presentation.theme.MvlTheme
@@ -192,6 +194,13 @@ fun LocationDetailScreen(
         }
     }
 
+    val leaveDetailWithoutSave: () -> Unit = {
+        mapViewModel.clearMapAfterLeavingFlow()
+        navController.popBackStack()
+    }
+
+    BackHandler(onBack = leaveDetailWithoutSave)
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val slotTitle = when (slot) {
@@ -208,7 +217,12 @@ fun LocationDetailScreen(
         error = uiState.error,
         onSave = { viewModel.onUserEvent(LocationDetailUserEvent.SaveClicked) },
         saveEnabled = location != null,
-        onBack = { navController.popBackStack() },
+        onBack = leaveDetailWithoutSave,
+    )
+
+    CommonErrorDialog(
+        message = uiState.error,
+        onDismiss = { viewModel.onUserEvent(LocationDetailUserEvent.ErrorDismissed) },
     )
 }
 

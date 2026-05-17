@@ -19,7 +19,7 @@ fun loadMergedSecrets(flavorName: String): Properties {
     rootProject.file("config/$flavorName.properties").takeIf { it.exists() }?.reader()?.use { reader ->
         val flavor = Properties()
         flavor.load(reader)
-        flavor.forEach { k, v ->
+        flavor.forEach { (k, v) ->
             val value = (v as String).trim()
             if (value.isNotEmpty()) merged[k as String] = value
         }
@@ -122,6 +122,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
 
     implementation(platform(libs.compose.bom))
+    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
@@ -130,6 +131,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.android)
+    debugImplementation(libs.androidx.ui.tooling)
     ksp(libs.hilt.compiler)
 
     implementation(libs.kotlinx.coroutines.android)

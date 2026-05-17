@@ -2,6 +2,7 @@ package com.mvlchain.data.di
 
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.mvlchain.data.BuildConfig
+import com.mvlchain.data.local.MockBookingHistoryStore
 import com.mvlchain.data.remote.api.AqiApi
 import com.mvlchain.data.remote.api.BookApi
 import com.mvlchain.data.remote.api.GeocodingApi
@@ -33,12 +34,13 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         json: Json,
+        mockBookingHistoryStore: MockBookingHistoryStore,
     ): OkHttpClient {
         val builder = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-            .addInterceptor(MockBooksInterceptor(json))
+            .addInterceptor(MockBooksInterceptor(json, mockBookingHistoryStore))
 
         if (BuildConfig.ENABLE_HTTP_LOGGING) {
             val logging = HttpLoggingInterceptor().apply {

@@ -11,11 +11,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -39,6 +43,7 @@ import com.tadamaps.mobile.R
 import com.mvlchain.domain.model.BookHistoryItem
 import com.mvlchain.domain.model.GeoCoordinate
 import com.mvlchain.domain.model.MapLocation
+import com.tadamaps.mobile.presentation.common.CommonErrorDialog
 import com.tadamaps.mobile.presentation.map.MapViewModel
 import com.tadamaps.mobile.presentation.navigation.Routes
 import com.tadamaps.mobile.presentation.theme.MvlTheme
@@ -60,6 +65,7 @@ private fun formatHistoryTotalPrice(price: Double): String {
 internal fun HistoryScreenContent(
     uiState: HistoryUiState,
     onItemClick: (BookHistoryItem) -> Unit,
+    onBackClick: (() -> Unit)? = null,
 ) {
     val padH = dimensionResource(R.dimen.mvl_screen_padding_horizontal)
     val listSpacing = dimensionResource(R.dimen.mvl_list_spacing)
@@ -72,6 +78,16 @@ internal fun HistoryScreenContent(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.history_title)) },
+                navigationIcon = {
+                    if (onBackClick != null) {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.navigation_back),
+                            )
+                        }
+                    }
+                },
             )
         },
     ) { padding ->
@@ -86,18 +102,7 @@ internal fun HistoryScreenContent(
                 HistoryUiState.Loading -> CircularProgressIndicator()
 
                 is HistoryUiState.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = current.message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
+                    Box(modifier = Modifier.fillMaxSize())
                 }
 
                 is HistoryUiState.Loaded -> {
@@ -175,6 +180,13 @@ fun HistoryScreen(navController: NavHostController) {
         navController.getBackStackEntry(Routes.Map),
     )
 
+    val popToMap: () -> Unit = {
+        mapViewModel.clearMapAfterLeavingFlow()
+        navController.popBackStack(Routes.Map, false)
+    }
+
+    BackHandler(onBack = popToMap)
+
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.onUserEvent(HistoryUserEvent.Refresh)
     }
@@ -183,7 +195,6 @@ fun HistoryScreen(navController: NavHostController) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 is HistoryEffect.RestoreBookingOnMap -> {
-                    navController.getBackStackEntry(Routes.Map).savedStateHandle[MapViewModel.RESET_KEY] = false
                     mapViewModel.applyRestoration(effect.item)
                     navController.popBackStack(Routes.Map, false)
                 }
@@ -194,6 +205,13 @@ fun HistoryScreen(navController: NavHostController) {
     HistoryScreenContent(
         uiState = uiState,
         onItemClick = { viewModel.onUserEvent(HistoryUserEvent.ItemClicked(it)) },
+        onBackClick = popToMap,
+    )
+
+    val historyError = (uiState as? HistoryUiState.Error)?.message
+    CommonErrorDialog(
+        message = historyError,
+        onDismiss = { viewModel.onUserEvent(HistoryUserEvent.ErrorAcknowledged) },
     )
 }
 
@@ -300,9 +318,13 @@ private fun HistoryScreenPreviewLoading() {
 @Composable
 private fun HistoryScreenPreviewError() {
     MvlTheme {
-        HistoryScreenContent(
-            uiState = HistoryUiState.Error("Could not load history"),
-            onItemClick = {},
-        )
+        Box {
+            HistoryScreenContent(
+                uiState = HistoryUiState.Error("Could not load history"),
+                onItemClick = {},
+                onBackClick = {},
+            )
+            CommonErrorDialog(message = "Could not load history", onDismiss = {})
+        }
     }
 }

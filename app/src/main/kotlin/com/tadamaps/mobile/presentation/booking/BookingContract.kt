@@ -9,6 +9,7 @@ sealed interface BookingUiState {
     data object Idle : BookingUiState
     data object Loading : BookingUiState
     data class Error(val message: String) : BookingUiState
+    data object IdleAfterError : BookingUiState
     data class Success(val result: BookingResult) : BookingUiState
 }
 
@@ -20,6 +21,7 @@ sealed interface BookingUserEvent {
     data object StartBooking : BookingUserEvent
     data object ViewHistoryClicked : BookingUserEvent
     data object BackToMapClicked : BookingUserEvent
+    data object ErrorAcknowledged : BookingUserEvent
 }
 
 /**

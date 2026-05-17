@@ -8,11 +8,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,8 +27,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,6 +37,7 @@ import com.tadamaps.mobile.R
 import com.mvlchain.domain.model.BookingResult
 import com.mvlchain.domain.model.GeoCoordinate
 import com.mvlchain.domain.model.MapLocation
+import com.tadamaps.mobile.presentation.common.CommonErrorDialog
 import com.tadamaps.mobile.presentation.map.MapViewModel
 import com.tadamaps.mobile.presentation.navigation.Routes
 import com.tadamaps.mobile.presentation.theme.MvlTheme
@@ -51,7 +56,19 @@ internal fun BookingScreenContent(
     val blockSpacing = dimensionResource(R.dimen.mvl_block_spacing)
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Booking") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Booking") },
+                navigationIcon = {
+                    IconButton(onClick = onBackToMap) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.navigation_back),
+                        )
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -70,28 +87,20 @@ internal fun BookingScreenContent(
                     }
                 }
 
+                BookingUiState.IdleAfterError -> {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                    )
+                }
+
                 is BookingUiState.Error -> {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(blockSpacing),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(
-                                text = current.message,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                            Button(onClick = onBackToMap) {
-                                Text("Back")
-                            }
-                        }
-                    }
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                    )
                 }
 
                 is BookingUiState.Success -> {
@@ -163,6 +172,9 @@ internal fun BookingScreenContent(
 fun BookingScreen(navController: NavHostController) {
     val viewModel: BookingViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val mapViewModel: MapViewModel = hiltViewModel(
+        navController.getBackStackEntry(Routes.Map),
+    )
 
     LaunchedEffect(Unit) {
         viewModel.onUserEvent(BookingUserEvent.StartBooking)
@@ -173,9 +185,8 @@ fun BookingScreen(navController: NavHostController) {
             when (effect) {
                 BookingEffect.NavigateToHistory -> navController.navigate(Routes.History)
                 BookingEffect.NavigateBack -> {
-                    val mapEntry = navController.getBackStackEntry(Routes.Map)
-                    mapEntry.savedStateHandle[MapViewModel.RESET_KEY] = true
-                    navController.popBackStack()
+                    mapViewModel.clearMapAfterLeavingFlow()
+                    navController.popBackStack(Routes.Map, false)
                 }
             }
         }
@@ -189,6 +200,12 @@ fun BookingScreen(navController: NavHostController) {
         uiState = uiState,
         onBackToMap = { viewModel.onUserEvent(BookingUserEvent.BackToMapClicked) },
         onViewHistory = { viewModel.onUserEvent(BookingUserEvent.ViewHistoryClicked) },
+    )
+
+    val bookingError = (uiState as? BookingUiState.Error)?.message
+    CommonErrorDialog(
+        message = bookingError,
+        onDismiss = { viewModel.onUserEvent(BookingUserEvent.ErrorAcknowledged) },
     )
 }
 
@@ -290,10 +307,13 @@ private fun BookingScreenPreviewSuccess() {
 @Composable
 private fun BookingScreenPreviewError() {
     MvlTheme {
-        BookingScreenContent(
-            uiState = BookingUiState.Error("Network error"),
-            onBackToMap = {},
-            onViewHistory = {},
-        )
+        Box {
+            BookingScreenContent(
+                uiState = BookingUiState.Error("Network error"),
+                onBackToMap = {},
+                onViewHistory = {},
+            )
+            CommonErrorDialog(message = "Network error", onDismiss = {})
+        }
     }
 }

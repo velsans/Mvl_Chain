@@ -38,6 +38,9 @@ class LocationDetailViewModel @Inject constructor(
             is LocationDetailUserEvent.Hydrate -> hydrate(event.slot, event.location)
             is LocationDetailUserEvent.NicknameChanged -> onNicknameChanged(event.value)
             LocationDetailUserEvent.SaveClicked -> save()
+            LocationDetailUserEvent.ErrorDismissed -> {
+                _uiState.update { it.copy(error = null) }
+            }
         }
     }
 

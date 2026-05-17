@@ -1,6 +1,5 @@
 package com.tadamaps.mobile.presentation.map
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
@@ -40,7 +39,6 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MapViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
     private val getAirQualityUseCase: GetAirQualityUseCase,
     private val buildMapLocation: BuildMapLocationUseCase,
     private val observeNickname: ObserveNicknameUseCase,
@@ -68,8 +66,20 @@ class MapViewModel @Inject constructor(
     init {
         observeNicknames()
         observeCenterAqi()
-        observeReset()
         restoreFromHistory()
+    }
+
+    /**
+     * Clears chosen A/B map pins and booking step immediately, then drops saved nicknames so the
+     * sheet shows the empty slot placeholder. Use when the user dismisses booking, history, or
+     * location detail without restoring a history row.
+     */
+    fun clearMapAfterLeavingFlow() {
+        reset()
+        viewModelScope.launch(ioDispatcher) {
+            locationPreferences.saveNickname(LocationSlot.A, null)
+            locationPreferences.saveNickname(LocationSlot.B, null)
+        }
     }
 
     fun peekCameraCenter(): LatLng = lastCameraCenter.value
@@ -203,17 +213,6 @@ class MapViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun observeReset() {
-        savedStateHandle.getStateFlow(RESET_KEY, false)
-            .onEach { shouldReset ->
-                if (shouldReset) {
-                    reset()
-                    savedStateHandle[RESET_KEY] = false
-                }
-            }
-            .launchIn(viewModelScope)
-    }
-
     fun reset() {
         _uiState.value = MapUiState()
         val default = MapDefaults.INITIAL_CENTER
@@ -256,9 +255,5 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             applyRestoration(pending)
         }
-    }
-
-    companion object {
-        const val RESET_KEY = "reset_map"
     }
 }

@@ -32,6 +32,9 @@ class BookingViewModel @Inject constructor(
 
     fun onUserEvent(event: BookingUserEvent) {
         when (event) {
+            BookingUserEvent.ErrorAcknowledged -> {
+                _uiState.value = BookingUiState.IdleAfterError
+            }
             BookingUserEvent.StartBooking -> startBooking()
             BookingUserEvent.ViewHistoryClicked -> {
                 viewModelScope.launch { _effects.send(BookingEffect.NavigateToHistory) }

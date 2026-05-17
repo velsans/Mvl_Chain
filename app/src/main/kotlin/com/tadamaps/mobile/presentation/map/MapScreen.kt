@@ -27,8 +27,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -76,6 +74,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.tadamaps.mobile.R
 import com.mvlchain.domain.model.GeoCoordinate
 import com.mvlchain.domain.model.MapLocation
+import com.tadamaps.mobile.presentation.common.CommonErrorDialog
 import com.tadamaps.mobile.presentation.navigation.Routes
 import com.tadamaps.mobile.presentation.theme.MvlTheme
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -539,7 +538,6 @@ fun MapScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val cameraRelocationEpoch by viewModel.cameraRelocationEpoch.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var mapLoaded by remember { mutableStateOf(false) }
     var showExitConfirm by remember { mutableStateOf(false) }
@@ -598,12 +596,6 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(uiState.errorMessage) {
-        val msg = uiState.errorMessage ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(msg)
-        viewModel.onUserEvent(MapUserEvent.ErrorConsumed)
-    }
-
     LaunchedEffect(mapLoaded, cameraRelocationEpoch) {
         if (!mapLoaded || cameraRelocationEpoch == 0) return@LaunchedEffect
         val c = viewModel.peekCameraCenter()
@@ -650,8 +642,12 @@ fun MapScreen(
         )
     }
 
+    CommonErrorDialog(
+        message = uiState.errorMessage,
+        onDismiss = { viewModel.onUserEvent(MapUserEvent.ErrorConsumed) },
+    )
+
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         Box(
             modifier = Modifier

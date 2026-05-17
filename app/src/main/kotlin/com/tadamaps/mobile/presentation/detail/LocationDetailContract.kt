@@ -27,6 +27,7 @@ sealed interface LocationDetailUserEvent {
     data class Hydrate(val slot: LocationSlot, val location: MapLocation?) : LocationDetailUserEvent
     data class NicknameChanged(val value: String) : LocationDetailUserEvent
     data object SaveClicked : LocationDetailUserEvent
+    data object ErrorDismissed : LocationDetailUserEvent
 }
 
 /**

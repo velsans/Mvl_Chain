@@ -1,6 +1,7 @@
 package com.mvlchain.data.remote.interceptor
 
 import com.mvlchain.data.BuildConfig
+import com.mvlchain.data.local.MockBookingHistoryStore
 import com.mvlchain.data.remote.dto.BookHistoryResponseDto
 import com.mvlchain.data.remote.dto.BookRequestDto
 import com.mvlchain.data.remote.dto.BookResponseDto
@@ -17,17 +18,15 @@ import java.util.UUID
 
 /**
  * Simulates booking APIs locally without affecting domain contracts.
+ * History is persisted via [MockBookingHistoryStore] so it survives app restarts when mock is on.
  */
 class MockBooksInterceptor(
     private val json: Json,
+    private val historyStore: MockBookingHistoryStore,
     private val mockDelayMs: Long = BuildConfig.MOCK_DELAY_MS,
     private val enabled: Boolean = BuildConfig.MOCK_BOOKS_NETWORK,
 ) : Interceptor {
 
-    private data class RecordedBooking(val year: Int, val month: Int, val dto: BookResponseDto)
-
-    private val recordedBookings = mutableListOf<RecordedBooking>()
-    private val recordedLock = Any()
     override fun intercept(chain: Interceptor.Chain): Response {
         if (!enabled || !chain.request().url.encodedPath.contains("books")) {
             return chain.proceed(chain.request())
@@ -41,7 +40,7 @@ class MockBooksInterceptor(
         return when {
             request.method == "POST" && path.contains("books") -> handlePost(request)
             request.method == "GET" && path.contains("books") -> handleGet(request)
-            else -> chain.proceed(request)
+            else -> chain.proceed(chain.request())
         }
     }
 
@@ -52,7 +51,6 @@ class MockBooksInterceptor(
         val parsed = runCatching { json.decodeFromString<BookRequestDto>(bodyString) }.getOrNull()
             ?: return errorResponse("invalid payload")
 
-        // Spec: mocked price (e.g. 10_000); still echo A/B from the request body.
         val price = 10_000.0
         val responseDto = BookResponseDto(
             id = UUID.randomUUID().toString(),
@@ -61,16 +59,11 @@ class MockBooksInterceptor(
             price = price,
         )
         val cal = Calendar.getInstance()
-        synchronized(recordedLock) {
-            recordedBookings.add(
-                0,
-                RecordedBooking(
-                    year = cal.get(Calendar.YEAR),
-                    month = cal.get(Calendar.MONTH) + 1,
-                    dto = responseDto,
-                ),
-            )
-        }
+        historyStore.appendFront(
+            year = cal.get(Calendar.YEAR),
+            month = cal.get(Calendar.MONTH) + 1,
+            response = responseDto,
+        )
         return jsonResponse(json.encodeToString(responseDto))
     }
 
@@ -81,11 +74,7 @@ class MockBooksInterceptor(
         val year = request.url.queryParameter("year")?.toIntOrNull() ?: defaultYear
         val month = request.url.queryParameter("month")?.toIntOrNull() ?: defaultMonth
 
-        val items = synchronized(recordedLock) {
-            recordedBookings
-                .filter { it.year == year && it.month == month }
-                .map { it.dto }
-        }
+        val items = historyStore.findByMonth(year, month)
         val dto = BookHistoryResponseDto(items = items)
         return jsonResponse(json.encodeToString(dto))
     }

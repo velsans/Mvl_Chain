@@ -21,6 +21,7 @@ sealed interface HistoryUiState {
 sealed interface HistoryUserEvent {
     data object Refresh : HistoryUserEvent
     data class ItemClicked(val item: BookHistoryItem) : HistoryUserEvent
+    data object ErrorAcknowledged : HistoryUserEvent
 }
 
 /**

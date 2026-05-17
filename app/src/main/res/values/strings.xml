@@ -30,4 +30,9 @@
     <string name="history_title">History</string>
     <string name="history_total_count_label">Total Count</string>
     <string name="history_total_price_label">Total Price</string>
+
+    <string name="navigation_back">Back</string>
+
+    <string name="common_error_title">Error</string>
+    <string name="common_error_ok">OK</string>
 </resources>

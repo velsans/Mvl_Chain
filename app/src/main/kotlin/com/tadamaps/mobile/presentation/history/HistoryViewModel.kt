@@ -31,6 +31,13 @@ class HistoryViewModel @Inject constructor(
     fun onUserEvent(event: HistoryUserEvent) {
         when (event) {
             HistoryUserEvent.Refresh -> refresh()
+            HistoryUserEvent.ErrorAcknowledged -> {
+                _uiState.value = HistoryUiState.Loaded(
+                    items = emptyList(),
+                    totalCount = 0,
+                    totalPrice = 0.0,
+                )
+            }
             is HistoryUserEvent.ItemClicked -> {
                 viewModelScope.launch {
                     _effects.send(HistoryEffect.RestoreBookingOnMap(event.item))
