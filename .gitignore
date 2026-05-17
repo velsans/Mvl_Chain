@@ -1,0 +1,27 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+**/build/
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+.kotlin/
+*.log
+
+# Keystores — never commit
+*.jks
+*.keystore
+
+# API keys / secrets (use local.properties or config/*.properties locally — not committed)
+secrets.properties
+.env
+config/*.properties
+!config/*.properties.example

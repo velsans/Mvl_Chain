@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_cta_set_a">Set A</string>
+    <string name="map_cta_set_b">Set B</string>
+    <string name="map_cta_book">Book</string>
+    <string name="map_open_google_navigation">Directions in Google Maps</string>
+    <string name="map_slot_no_address">—</string>
+    <string name="map_aqi_label">AQI</string>
+    <string name="map_aqi_no_reading">—</string>
+    <string name="map_aqi_cat_good">Good</string>
+    <string name="map_aqi_cat_moderate">Moderate</string>
+    <string name="map_aqi_cat_sensitive">Unhealthy for Sensitive Groups</string>
+    <string name="map_aqi_cat_unhealthy">Unhealthy</string>
+    <string name="map_aqi_cat_very_unhealthy">Very Unhealthy</string>
+    <string name="map_aqi_cat_hazardous">Hazardous</string>
+    <string name="map_slot_letter_a">A</string>
+    <string name="map_slot_letter_b">B</string>
+
+    <string name="map_exit_title">Close app?</string>
+    <string name="map_exit_message">Do you want to close the application?</string>
+    <string name="map_exit_confirm">Close</string>
+    <string name="map_exit_cancel">Cancel</string>
+
+    <string name="detail_location_a">Location A</string>
+    <string name="detail_location_b">Location B</string>
+    <string name="detail_no_location">Pick this location on the map first.</string>
+    <string name="detail_nickname_placeholder">Nickname (optional)</string>
+    <string name="detail_save">Save</string>
+
+    <string name="history_title">History</string>
+    <string name="history_total_count_label">Total Count</string>
+    <string name="history_total_price_label">Total Price</string>
+</resources>

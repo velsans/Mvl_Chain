@@ -1,0 +1,10 @@
+# Template: copy to config/dev.properties (and adjust name for qa/prod) or create files manually.
+# Example:  cp config/dev.properties.example config/dev.properties
+
+MAPS_API_KEY=your_dev_maps_key
+AQI_API_TOKEN=your_dev_aqi_token
+GEO_API_KEY=
+
+# Optional release hardening: SHA-256 of your release signing cert (hex, no colons).
+# If set, release APKs with a different signature will not start. Leave empty to skip.
+# RELEASE_CERT_SHA256=

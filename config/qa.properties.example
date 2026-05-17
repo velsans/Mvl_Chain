@@ -1,0 +1,6 @@
+MAPS_API_KEY=your_qa_maps_key
+AQI_API_TOKEN=your_qa_aqi_token
+GEO_API_KEY=
+
+# Optional: pin expected release signing certificate (see dev.properties.example).
+# RELEASE_CERT_SHA256=

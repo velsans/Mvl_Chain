@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="mvl_primary">#FFC400</color>
+    <color name="mvl_on_primary">#000000</color>
+    <color name="mvl_surface">#FAFAFA</color>
+    <color name="mvl_primary_container">#FFF8E1</color>
+    <color name="mvl_on_primary_container">#5C4A00</color>
+    <color name="mvl_secondary">#424242</color>
+    <color name="mvl_on_secondary">#FFFFFF</color>
+    <color name="mvl_background">#FFFFFF</color>
+    <color name="mvl_on_surface">#1C1C1C</color>
+    <color name="mvl_on_surface_variant">#5C5C5C</color>
+    <color name="mvl_dark_background">#121212</color>
+    <color name="mvl_dark_surface">#1E1E1E</color>
+    <!-- Compose preview-only (map placeholder) -->
+    <color name="mvl_preview_map_placeholder">#CFD8DC</color>
+
+    <!-- Map AQI chip (mint card / purple value) -->
+    <color name="mvl_aqi_card_background">#E8F5F0</color>
+    <color name="mvl_aqi_value">#7B2CBF</color>
+    <color name="mvl_aqi_muted">#757575</color>
+
+    <!-- App logo: adaptive launcher icon background (= brand primary) -->
+    <color name="ic_launcher_background">@color/mvl_primary</color>
+</resources>
