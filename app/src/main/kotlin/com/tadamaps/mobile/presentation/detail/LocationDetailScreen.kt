@@ -189,7 +189,8 @@ fun LocationDetailScreen(
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                LocationDetailEffect.NavigateBack -> navController.popBackStack()
+                LocationDetailEffect.NavigateBack ->
+                    navController.popBackStack(Routes.Map, inclusive = false)
             }
         }
     }

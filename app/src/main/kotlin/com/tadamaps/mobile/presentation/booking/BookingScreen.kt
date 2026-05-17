@@ -38,6 +38,7 @@ import com.mvlchain.domain.model.BookingResult
 import com.mvlchain.domain.model.GeoCoordinate
 import com.mvlchain.domain.model.MapLocation
 import com.tadamaps.mobile.presentation.common.CommonErrorDialog
+import com.tadamaps.mobile.presentation.common.LocationSummaryBlock
 import com.tadamaps.mobile.presentation.map.MapViewModel
 import com.tadamaps.mobile.presentation.navigation.Routes
 import com.tadamaps.mobile.presentation.theme.MvlTheme
@@ -78,24 +79,38 @@ internal fun BookingScreenContent(
             verticalArrangement = Arrangement.spacedBy(blockSpacing),
         ) {
             when (val current = uiState) {
-                BookingUiState.Idle,
-                BookingUiState.Loading,
-                -> {
+                BookingUiState.Idle -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                    if (current is BookingUiState.Loading) {
-                        Text("Placing booking…", style = MaterialTheme.typography.bodyLarge)
-                    }
                 }
 
-                BookingUiState.IdleAfterError -> {
-                    Box(
+                is BookingUiState.Loading -> {
+                    SelectedLocationsList(
+                        locationA = current.locationA,
+                        locationB = current.locationB,
+                    )
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    Text("Placing booking…", style = MaterialTheme.typography.bodyLarge)
+                }
+
+                is BookingUiState.IdleAfterError -> {
+                    Column(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth(),
-                    )
+                    ) {
+                        SelectedLocationsList(
+                            locationA = current.locationA,
+                            locationB = current.locationB,
+                        )
+                    }
                 }
 
                 is BookingUiState.Error -> {
+                    val a = current.locationA
+                    val b = current.locationB
+                    if (a != null && b != null) {
+                        SelectedLocationsList(locationA = a, locationB = b)
+                    }
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -117,14 +132,9 @@ internal fun BookingScreenContent(
                                 .fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(blockSpacing),
                         ) {
-                            LocationSummaryBlock(
-                                label = "A",
-                                location = result.locationA,
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            LocationSummaryBlock(
-                                label = "B",
-                                location = result.locationB,
+                            SelectedLocationsList(
+                                locationA = result.locationA,
+                                locationB = result.locationB,
                             )
                         }
                         Column(
@@ -210,33 +220,26 @@ fun BookingScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun LocationSummaryBlock(
-    label: String,
-    location: MapLocation,
+private fun SelectedLocationsList(
+    locationA: MapLocation,
+    locationB: MapLocation,
 ) {
-    val rowSpacing = dimensionResource(R.dimen.mvl_row_spacing)
-    Column(verticalArrangement = Arrangement.spacedBy(rowSpacing)) {
-        Text(
-            "$label ${location.formattedAddress}",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-        )
-        Text(
-            "aqi ${location.airQualityIndex ?: "0"}",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        location.nickname?.takeIf { it.isNotBlank() }?.let { nick ->
-            Text(
-                nick,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
+    val blockSpacing = dimensionResource(R.dimen.mvl_block_spacing)
+    Column(verticalArrangement = Arrangement.spacedBy(blockSpacing)) {
+        LocationSummaryBlock(label = "A", location = locationA, showAddressAndNickname = true)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        LocationSummaryBlock(label = "B", location = locationB, showAddressAndNickname = true)
     }
 }
 
-private fun previewBookingSuccess(): BookingUiState.Success {
-    val a = MapLocation(GeoCoordinate(0.0, 0.0), "Balam Rd", 80, "home")
+private fun previewBookingLocations(): Pair<MapLocation, MapLocation> {
+    val a = MapLocation(GeoCoordinate(0.0, 0.0), "123 Balam Rd, Singapore", 80, "home")
     val b = MapLocation(GeoCoordinate(0.0, 0.0), "Circuit Rd", 72, "office")
+    return a to b
+}
+
+private fun previewBookingSuccess(): BookingUiState.Success {
+    val (a, b) = previewBookingLocations()
     return BookingUiState.Success(
         BookingResult(
             id = "preview",
@@ -274,7 +277,10 @@ private fun BookingScreenPreviewIdle() {
 private fun BookingScreenPreviewLoading() {
     MvlTheme {
         BookingScreenContent(
-            uiState = BookingUiState.Loading,
+            uiState = BookingUiState.Loading(
+                locationA = previewBookingLocations().first,
+                locationB = previewBookingLocations().second,
+            ),
             onBackToMap = {},
             onViewHistory = {},
         )
@@ -309,7 +315,10 @@ private fun BookingScreenPreviewError() {
     MvlTheme {
         Box {
             BookingScreenContent(
-                uiState = BookingUiState.Error("Network error"),
+                uiState = run {
+                    val (a, b) = previewBookingLocations()
+                    BookingUiState.Error("Network error", a, b)
+                },
                 onBackToMap = {},
                 onViewHistory = {},
             )

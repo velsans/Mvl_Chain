@@ -257,10 +257,8 @@ internal fun MapScreenChrome(
     val locationB = uiState.locationB
     val hasCapturedA = locationA?.formattedAddress?.isNotBlank() == true
     val hasCapturedB = locationB?.formattedAddress?.isNotBlank() == true
-    val lineA = locationA?.takeIf { hasCapturedA }?.formattedAddress
-    val lineB = locationB?.takeIf { hasCapturedB }?.formattedAddress
-    val nicknameA = locationA?.takeIf { hasCapturedA }?.nickname?.takeIf { it.isNotBlank() }
-    val nicknameB = locationB?.takeIf { hasCapturedB }?.nickname?.takeIf { it.isNotBlank() }
+    val lineA = locationA?.takeIf { hasCapturedA }?.displayLabel
+    val lineB = locationB?.takeIf { hasCapturedB }?.displayLabel
 
     Box(modifier.fillMaxSize()) {
         Image(
@@ -423,15 +421,6 @@ internal fun MapScreenChrome(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
-                                    nicknameA?.let { nick ->
-                                        Text(
-                                            text = nick,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                    }
                                 }
                             }
                         }
@@ -473,15 +462,6 @@ internal fun MapScreenChrome(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
-                                    nicknameB?.let { nick ->
-                                        Text(
-                                            text = nick,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                    }
                                 }
                             }
                         }

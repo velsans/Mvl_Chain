@@ -8,4 +8,5 @@ data class CachedMapLocationDto(
     val longitude: Double,
     val address: String,
     val aqi: Int?,
+    val nickname: String? = null,
 )

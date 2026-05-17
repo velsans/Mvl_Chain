@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -57,6 +56,24 @@ private fun formatHistoryTotalPrice(price: Double): String {
     return nf.format(price)
 }
 
+/** 0 → A, 1 → B, … 25 → Z, 26 → AA (Excel-style). */
+private fun historyLineLabel(zeroBasedLineIndex: Int): String {
+    var n = zeroBasedLineIndex + 1
+    val sb = StringBuilder()
+    while (n > 0) {
+        n--
+        sb.insert(0, 'A' + (n % 26))
+        n /= 26
+    }
+    return sb.toString()
+}
+
+private data class HistoryAddressRow(
+    val booking: BookHistoryItem,
+    /** 0 = first leg ([BookHistoryItem.locationA]), 1 = second leg. */
+    val legIndex: Int,
+)
+
 /**
  * Stateless history UI for previews and [HistoryScreen].
  */
@@ -106,6 +123,12 @@ internal fun HistoryScreenContent(
                 }
 
                 is HistoryUiState.Loaded -> {
+                    val flatRows = current.items.flatMap { item ->
+                        listOf(
+                            HistoryAddressRow(item, 0),
+                            HistoryAddressRow(item, 1),
+                        )
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -146,14 +169,19 @@ internal fun HistoryScreenContent(
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         itemsIndexed(
-                            items = current.items,
-                            key = { _, item -> item.id },
-                        ) { index, item ->
-                            HistoryBookingGroup(
-                                item = item,
-                                onClick = { onItemClick(item) },
+                            items = flatRows,
+                            key = { _, row -> "${row.booking.id}_${row.legIndex}" },
+                        ) { index, row ->
+                            HistoryAddressLine(
+                                lineLabel = historyLineLabel(index),
+                                address = when (row.legIndex) {
+                                    0 -> row.booking.locationA.formattedAddress
+                                    else -> row.booking.locationB.formattedAddress
+                                },
+                                onClick = { onItemClick(row.booking) },
                             )
-                            if (index < current.items.lastIndex) {
+                            val endOfBookingGroup = row.legIndex == 1
+                            if (endOfBookingGroup && index < flatRows.lastIndex) {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = dividerPadV),
                                     thickness = dividerThickness,
@@ -215,61 +243,37 @@ fun HistoryScreen(navController: NavHostController) {
     )
 }
 
+/** Single address line with a sequential label (A, B, C, …). */
 @Composable
-private fun HistoryBookingGroup(
-    item: BookHistoryItem,
+private fun HistoryAddressLine(
+    lineLabel: String,
+    address: String,
     onClick: () -> Unit,
 ) {
     val rowPadV = dimensionResource(R.dimen.mvl_history_row_padding_vertical)
-    val rowSpacing = dimensionResource(R.dimen.mvl_row_spacing)
     val labelColumnWidth = dimensionResource(R.dimen.mvl_history_label_column_width)
     val labelPadEnd = dimensionResource(R.dimen.mvl_spacing_xs)
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(vertical = rowPadV),
-        verticalArrangement = Arrangement.spacedBy(rowSpacing),
+            .padding(vertical = rowPadV)
+            .background(MaterialTheme.colorScheme.surface),
     ) {
-        Row(
+        Text(
+            text = lineLabel,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
-        ) {
-            Text(
-                text = stringResource(R.string.map_slot_letter_a),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .width(labelColumnWidth)
-                    .padding(end = labelPadEnd)
-                    .alignByBaseline(),
-            )
-            Text(
-                text = item.locationA.formattedAddress,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.alignByBaseline(),
-            )
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
-        ) {
-            Text(
-                text = stringResource(R.string.map_slot_letter_b),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .width(labelColumnWidth)
-                    .padding(end = labelPadEnd)
-                    .alignByBaseline(),
-            )
-            Text(
-                text = item.locationB.formattedAddress,
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        }
+                .width(labelColumnWidth)
+                .padding(end = labelPadEnd)
+                .alignByBaseline(),
+        )
+        Text(
+            text = address,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.alignByBaseline(),
+        )
     }
 }
 

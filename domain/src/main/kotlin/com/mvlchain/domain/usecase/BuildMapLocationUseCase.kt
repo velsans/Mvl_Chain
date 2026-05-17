@@ -22,9 +22,9 @@ class BuildMapLocationUseCase(
             val cached = preferences.getCachedLocation(coordinate)
             if (cached != null) {
                 val nick = preferences.getNickname(slot)
-                return Result.success(
-                    cached.copy(nickname = nick?.takeIf { it.isNotBlank() }),
-                )
+                val cachedNick = cached.nickname?.takeIf { it.isNotBlank() }
+                val merged = nick?.takeIf { it.isNotBlank() } ?: cachedNick
+                return Result.success(cached.copy(nickname = merged))
             }
         }
 

@@ -6,7 +6,7 @@ import com.mvlchain.domain.model.MapLocation
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Local nicknames and optional coordinate-keyed cache for map locations.
+ * Local slot nicknames and coordinate-keyed cache for map locations.
  */
 interface LocationPreferenceRepository {
     suspend fun saveNickname(slot: LocationSlot, nickname: String?)
@@ -18,4 +18,7 @@ interface LocationPreferenceRepository {
     suspend fun cacheLocation(location: MapLocation)
 
     suspend fun getCachedLocation(coordinate: GeoCoordinate): MapLocation?
+
+    /** Clears nickname fields from all coordinate cache entries (e.g. after map reset). */
+    suspend fun stripCachedLocationNicknames()
 }

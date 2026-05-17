@@ -33,7 +33,18 @@ class BookingViewModel @Inject constructor(
     fun onUserEvent(event: BookingUserEvent) {
         when (event) {
             BookingUserEvent.ErrorAcknowledged -> {
-                _uiState.value = BookingUiState.IdleAfterError
+                when (val current = _uiState.value) {
+                    is BookingUiState.Error -> {
+                        val a = current.locationA
+                        val b = current.locationB
+                        if (a != null && b != null) {
+                            _uiState.value = BookingUiState.IdleAfterError(a, b)
+                        } else {
+                            _uiState.value = BookingUiState.Idle
+                        }
+                    }
+                    else -> Unit
+                }
             }
             BookingUserEvent.StartBooking -> startBooking()
             BookingUserEvent.ViewHistoryClicked -> {
@@ -48,7 +59,7 @@ class BookingViewModel @Inject constructor(
     private fun startBooking() {
         val request = navigator.consume()
         if (request == null) {
-            _uiState.value = BookingUiState.Error("Missing booking payload")
+            _uiState.value = BookingUiState.Error("Missing booking payload", null, null)
             return
         }
         submit(request)
@@ -56,14 +67,18 @@ class BookingViewModel @Inject constructor(
 
     private fun submit(request: BookingRequest) {
         viewModelScope.launch {
-            _uiState.value = BookingUiState.Loading
+            _uiState.value = BookingUiState.Loading(request.locationA, request.locationB)
             createBooking(request).fold(
                 onSuccess = { result ->
                     _uiState.update { BookingUiState.Success(result) }
                 },
                 onFailure = { error ->
                     _uiState.update {
-                        BookingUiState.Error(error.message ?: "Unable to complete booking")
+                        BookingUiState.Error(
+                            error.message ?: "Unable to complete booking",
+                            request.locationA,
+                            request.locationB,
+                        )
                     }
                 },
             )

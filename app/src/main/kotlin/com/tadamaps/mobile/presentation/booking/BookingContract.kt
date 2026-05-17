@@ -1,15 +1,26 @@
 package com.tadamaps.mobile.presentation.booking
 
 import com.mvlchain.domain.model.BookingResult
+import com.mvlchain.domain.model.MapLocation
 
 /**
  * MVVM: UI state for the booking result screen.
  */
 sealed interface BookingUiState {
     data object Idle : BookingUiState
-    data object Loading : BookingUiState
-    data class Error(val message: String) : BookingUiState
-    data object IdleAfterError : BookingUiState
+    data class Loading(
+        val locationA: MapLocation,
+        val locationB: MapLocation,
+    ) : BookingUiState
+    data class Error(
+        val message: String,
+        val locationA: MapLocation?,
+        val locationB: MapLocation?,
+    ) : BookingUiState
+    data class IdleAfterError(
+        val locationA: MapLocation,
+        val locationB: MapLocation,
+    ) : BookingUiState
     data class Success(val result: BookingResult) : BookingUiState
 }
 
