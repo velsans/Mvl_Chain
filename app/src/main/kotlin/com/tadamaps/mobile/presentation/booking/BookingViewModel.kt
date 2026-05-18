@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.mvlchain.domain.model.BookingRequest
 import com.mvlchain.domain.usecase.CreateBookingUseCase
 import com.tadamaps.mobile.presentation.navigation.BookingNavigator
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,9 +15,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * MVVM: booking ViewModel — [uiState], [effects], [onUserEvent].
+ * MVI: booking store — [uiState], [effects], [processIntent].
  */
-@HiltViewModel
 class BookingViewModel @Inject constructor(
     private val navigator: BookingNavigator,
     private val createBooking: CreateBookingUseCase,
@@ -30,9 +28,9 @@ class BookingViewModel @Inject constructor(
     private val _effects = Channel<BookingEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
-    fun onUserEvent(event: BookingUserEvent) {
-        when (event) {
-            BookingUserEvent.ErrorAcknowledged -> {
+    fun processIntent(intent: BookingIntent) {
+        when (intent) {
+            BookingIntent.ErrorAcknowledged -> {
                 when (val current = _uiState.value) {
                     is BookingUiState.Error -> {
                         val a = current.locationA
@@ -46,11 +44,11 @@ class BookingViewModel @Inject constructor(
                     else -> Unit
                 }
             }
-            BookingUserEvent.StartBooking -> startBooking()
-            BookingUserEvent.ViewHistoryClicked -> {
+            BookingIntent.StartBooking -> startBooking()
+            BookingIntent.ViewHistoryClicked -> {
                 viewModelScope.launch { _effects.send(BookingEffect.NavigateToHistory) }
             }
-            BookingUserEvent.BackToMapClicked -> {
+            BookingIntent.BackToMapClicked -> {
                 viewModelScope.launch { _effects.send(BookingEffect.NavigateBack) }
             }
         }

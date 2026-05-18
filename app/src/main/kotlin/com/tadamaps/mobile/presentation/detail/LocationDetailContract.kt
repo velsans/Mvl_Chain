@@ -4,7 +4,7 @@ import com.mvlchain.domain.model.LocationSlot
 import com.mvlchain.domain.model.MapLocation
 
 /**
- * MVVM: UI state for location nickname / detail.
+ * MVI: UI state for location nickname / detail.
  */
 data class LocationDetailUiState(
     val slot: LocationSlot,
@@ -21,17 +21,17 @@ data class LocationDetailUiState(
 }
 
 /**
- * MVVM: user intents → ViewModel.
+ * MVI: user intents -> ViewModel (pure data).
  */
-sealed interface LocationDetailUserEvent {
-    data class Hydrate(val slot: LocationSlot, val location: MapLocation?) : LocationDetailUserEvent
-    data class NicknameChanged(val value: String) : LocationDetailUserEvent
-    data object SaveClicked : LocationDetailUserEvent
-    data object ErrorDismissed : LocationDetailUserEvent
+sealed interface LocationDetailIntent {
+    data class Hydrate(val slot: LocationSlot, val location: MapLocation?) : LocationDetailIntent
+    data class NicknameChanged(val value: String) : LocationDetailIntent
+    data object SaveClicked : LocationDetailIntent
+    data object ErrorDismissed : LocationDetailIntent
 }
 
 /**
- * MVVM: one-shot effects → View (e.g. navigate back after save).
+ * MVI: one-shot effects -> View (e.g. navigate back after save).
  */
 sealed interface LocationDetailEffect {
     data object NavigateBack : LocationDetailEffect

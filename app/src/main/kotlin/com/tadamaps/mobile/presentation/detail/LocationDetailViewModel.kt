@@ -6,7 +6,6 @@ import com.mvlchain.domain.model.LocationSlot
 import com.mvlchain.domain.model.MapLocation
 import com.mvlchain.domain.repository.LocationPreferenceRepository
 import com.mvlchain.domain.usecase.SaveNicknameUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,9 +16,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * MVVM: location detail ViewModel — [uiState], [effects], [onUserEvent].
+ * MVI: location detail store — [uiState], [effects], [processIntent].
  */
-@HiltViewModel
 class LocationDetailViewModel @Inject constructor(
     private val saveNickname: SaveNicknameUseCase,
     private val preferences: LocationPreferenceRepository,
@@ -33,12 +31,12 @@ class LocationDetailViewModel @Inject constructor(
     private val _effects = Channel<LocationDetailEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
-    fun onUserEvent(event: LocationDetailUserEvent) {
-        when (event) {
-            is LocationDetailUserEvent.Hydrate -> hydrate(event.slot, event.location)
-            is LocationDetailUserEvent.NicknameChanged -> onNicknameChanged(event.value)
-            LocationDetailUserEvent.SaveClicked -> save()
-            LocationDetailUserEvent.ErrorDismissed -> {
+    fun processIntent(intent: LocationDetailIntent) {
+        when (intent) {
+            is LocationDetailIntent.Hydrate -> hydrate(intent.slot, intent.location)
+            is LocationDetailIntent.NicknameChanged -> onNicknameChanged(intent.value)
+            LocationDetailIntent.SaveClicked -> save()
+            LocationDetailIntent.ErrorDismissed -> {
                 _uiState.update { it.copy(error = null) }
             }
         }

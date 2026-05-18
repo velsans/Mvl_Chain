@@ -9,12 +9,9 @@ import com.mvlchain.domain.usecase.ReverseGeocodeUseCase
 import com.mvlchain.domain.usecase.SaveNicknameUseCase
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)
 object DomainUseCaseModule {
 
     @Provides

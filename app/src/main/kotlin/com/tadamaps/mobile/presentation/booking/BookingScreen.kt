@@ -30,9 +30,10 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.tadamaps.mobile.LocalViewModelFactory
 import com.tadamaps.mobile.R
 import com.mvlchain.domain.model.BookingResult
 import com.mvlchain.domain.model.GeoCoordinate
@@ -175,19 +176,20 @@ internal fun BookingScreenContent(
 }
 
 /**
- * MVVM: Booking **View** — observes [BookingViewModel.uiState], sends [BookingUserEvent], collects [BookingEffect].
+ * MVI: Booking **View** — observes [BookingViewModel.uiState], dispatches [BookingIntent], collects [BookingEffect].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingScreen(navController: NavHostController) {
-    val viewModel: BookingViewModel = hiltViewModel()
+    val viewModel: BookingViewModel = viewModel(factory = LocalViewModelFactory.current)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val mapViewModel: MapViewModel = hiltViewModel(
-        navController.getBackStackEntry(Routes.Map),
+    val mapViewModel: MapViewModel = viewModel(
+        viewModelStoreOwner = navController.getBackStackEntry(Routes.Map),
+        factory = LocalViewModelFactory.current,
     )
 
     LaunchedEffect(Unit) {
-        viewModel.onUserEvent(BookingUserEvent.StartBooking)
+        viewModel.processIntent(BookingIntent.StartBooking)
     }
 
     LaunchedEffect(Unit) {
@@ -203,19 +205,19 @@ fun BookingScreen(navController: NavHostController) {
     }
 
     BackHandler {
-        viewModel.onUserEvent(BookingUserEvent.BackToMapClicked)
+        viewModel.processIntent(BookingIntent.BackToMapClicked)
     }
 
     BookingScreenContent(
         uiState = uiState,
-        onBackToMap = { viewModel.onUserEvent(BookingUserEvent.BackToMapClicked) },
-        onViewHistory = { viewModel.onUserEvent(BookingUserEvent.ViewHistoryClicked) },
+        onBackToMap = { viewModel.processIntent(BookingIntent.BackToMapClicked) },
+        onViewHistory = { viewModel.processIntent(BookingIntent.ViewHistoryClicked) },
     )
 
     val bookingError = (uiState as? BookingUiState.Error)?.message
     CommonErrorDialog(
         message = bookingError,
-        onDismiss = { viewModel.onUserEvent(BookingUserEvent.ErrorAcknowledged) },
+        onDismiss = { viewModel.processIntent(BookingIntent.ErrorAcknowledged) },
     )
 }
 

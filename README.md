@@ -1,6 +1,6 @@
 # MVLChain
 
-Interview-ready Android sample demonstrating **Jetpack Compose**, **MVVM**, **Clean Architecture** (presentation / domain / data), **Hilt**, **Retrofit**, **Coroutines + Flow**, **Navigation Compose**, and **Google Maps**.
+Interview-ready Android sample demonstrating **Jetpack Compose**, **MVI-style presentation** (state + pure-data intents + effects), **Clean Architecture** (`:app` / `:domain` / `:data`), **Dagger 2** (with an **activity subcomponent**), **Room** for local location/nickname cache, **Retrofit**, **Coroutines + Flow**, **Navigation Compose**, and **Google Maps**.
 
 ## Modules
 
@@ -8,7 +8,7 @@ Interview-ready Android sample demonstrating **Jetpack Compose**, **MVVM**, **Cl
 |----------|----------------|
 | `:app`   | Compose UI, ViewModels, navigation, theming, single-activity entry |
 | `:domain`| Entities, repository contracts, use cases (pure Kotlin) |
-| `:data`  | Retrofit APIs, DTOs + mappers, repository implementations, local DataStore cache, booking mock interceptor |
+| `:data`  | Retrofit APIs, DTOs + mappers, repository implementations, **Room** DB for map cache + slot nicknames, booking mock interceptor |
 
 ## Product flavors
 
@@ -41,11 +41,12 @@ GEO_API_KEY=optional_bigdatacloud_key
 
 ## Architecture notes
 
-- **MVVM (presentation)**: Each feature has a **ViewModel** with **`uiState: StateFlow`**, **`onUserEvent(…)`** for intents, and **`effects: Flow`** for one-shot navigation/snackbar-style work; Compose screens only collect state and forward user actions.
+- **MVI (presentation)**: Each feature exposes **`uiState: StateFlow`**, **`processIntent(…)`** with **sealed intents** (no callback lambdas), and **`effects`** for one-shot navigation; Compose collects state and forwards user actions.
+- **Dependency injection**: **Dagger** `@Singleton` **application graph** + **`MainActivitySubcomponent`** demonstrating subcomponents; ViewModels use **`MviViewModelFactory`** and `CompositionLocal` for Compose.
 - **One-shot navigation / snackbars**: `Channel` / `SharedFlow` from ViewModels.
 - **Repositories** hide Retrofit and the **OkHttp mock interceptor**; domain depends only on interfaces.
 - **Booking mock**: `MockBooksInterceptor` simulates latency and JSON for `POST /v1/books` and `GET /v1/books` without changing use cases.
-- **Location cache**: coordinate key uses **three decimal places** (`GeoCoordinate.roundedKey()`).
+- **Location cache**: **Room** tables keyed by **`cache_${GeoCoordinate.roundedKey()}`** (three decimal places); slot nicknames in a separate table.
 - **Map / booking flow**: map captures **A** and **B**, navigates to booking, then optional history restore with **refreshed AQI**.
 
 ## JDK 17

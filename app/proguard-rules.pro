@@ -19,10 +19,19 @@
 -keep,allowobfuscation,allowshrinking class retrofit2.Response
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
 
-# Hilt
--keep class dagger.hilt.** { *; }
+# Dagger 2
+-dontwarn com.google.errorprone.annotations.**
+-keepclasseswithmembers class * {
+    @javax.inject.* *;
+}
+-keep class dagger.** { *; }
 -keep class javax.inject.** { *; }
--keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
+-keep class * extends dagger.internal.GeneratedComponent
+
+# Room
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-dontwarn androidx.room.paging.**
 
 # Google Maps (Play Services)
 -keep class com.google.android.gms.maps.** { *; }

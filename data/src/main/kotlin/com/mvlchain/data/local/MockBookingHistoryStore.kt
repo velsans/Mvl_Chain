@@ -1,14 +1,13 @@
 package com.mvlchain.data.local
 
-import android.content.Context
+import android.app.Application
 import com.mvlchain.data.remote.dto.BookResponseDto
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Serializable
 internal data class PersistedMockBooking(
@@ -23,10 +22,10 @@ internal data class PersistedMockBooking(
  */
 @Singleton
 class MockBookingHistoryStore @Inject constructor(
-    @ApplicationContext private val context: Context,
+    application: android.app.Application,
     private val json: Json,
 ) {
-    private val file = File(context.filesDir, "mock_booking_history.json")
+    private val file = File(application.filesDir, "mock_booking_history.json")
     private val lock = Any()
 
     fun appendFront(year: Int, month: Int, response: BookResponseDto) {

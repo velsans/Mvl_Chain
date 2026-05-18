@@ -52,7 +52,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tadamaps.mobile.LocalViewModelFactory
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -171,7 +172,7 @@ private suspend fun fetchUserLatLng(context: android.content.Context): LatLng? {
 
 /**
  * Moves the map camera so the center pin sits on the user's coordinates (when the map is ready).
- * Updates the ViewModel via [MapUserEvent.CameraIdle] so AQI/capture use that center.
+ * Updates the ViewModel via [MapIntent.CameraIdle] so AQI/capture use that center.
  */
 private suspend fun centerMapOnUser(
     context: android.content.Context,
@@ -195,9 +196,9 @@ private suspend fun centerMapOnUser(
 
     if (mapLoaded) {
         cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
-        viewModel.onUserEvent(MapUserEvent.CameraIdle(cameraPositionState.position.target))
+        viewModel.processIntent(MapIntent.CameraIdle(cameraPositionState.position.target))
     } else {
-        viewModel.onUserEvent(MapUserEvent.CameraIdle(latLng))
+        viewModel.processIntent(MapIntent.CameraIdle(latLng))
     }
 }
 
@@ -507,13 +508,16 @@ internal fun MapScreenChrome(
 }
 
 /**
- * MVVM: Map **View** — observes [MapViewModel.uiState], sends [MapUserEvent], collects [MapEffect].
+ * MVI: Map **View** — observes [MapViewModel.uiState], dispatches [MapIntent], collects [MapEffect].
  */
 @Composable
 fun MapScreen(
     navController: NavHostController,
     backStackEntry: NavBackStackEntry,
-    viewModel: MapViewModel = hiltViewModel(backStackEntry),
+    viewModel: MapViewModel = viewModel(
+        viewModelStoreOwner = backStackEntry,
+        factory = LocalViewModelFactory.current,
+    ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val cameraRelocationEpoch by viewModel.cameraRelocationEpoch.collectAsStateWithLifecycle()
@@ -564,7 +568,7 @@ fun MapScreen(
         if (fine || coarse) {
             centerMapOnUser(context, mapLoaded = true, cameraPositionState, viewModel)
         } else {
-            viewModel.onUserEvent(MapUserEvent.CameraIdle(cameraPositionState.position.target))
+            viewModel.processIntent(MapIntent.CameraIdle(cameraPositionState.position.target))
         }
     }
 
@@ -593,7 +597,7 @@ fun MapScreen(
             .distinctUntilChanged()
             .collect { moving ->
                 if (!moving && wasMoving) {
-                    viewModel.onUserEvent(MapUserEvent.CameraIdle(cameraPositionState.position.target))
+                    viewModel.processIntent(MapIntent.CameraIdle(cameraPositionState.position.target))
                 }
                 wasMoving = moving
             }
@@ -624,7 +628,7 @@ fun MapScreen(
 
     CommonErrorDialog(
         message = uiState.errorMessage,
-        onDismiss = { viewModel.onUserEvent(MapUserEvent.ErrorConsumed) },
+        onDismiss = { viewModel.processIntent(MapIntent.ErrorConsumed) },
     )
 
     Scaffold(
@@ -662,7 +666,7 @@ fun MapScreen(
                         navController.navigate(Routes.locationDetail("B"))
                     }
                 },
-                onPrimaryFabClick = { viewModel.onUserEvent(MapUserEvent.PrimaryActionClicked) },
+                onPrimaryFabClick = { viewModel.processIntent(MapIntent.PrimaryActionClicked) },
                 onOpenGoogleMapsNavigation = run {
                     if (uiState.step != MapBookingStep.ReadyToBook) return@run null
                     val locA = uiState.locationA ?: return@run null

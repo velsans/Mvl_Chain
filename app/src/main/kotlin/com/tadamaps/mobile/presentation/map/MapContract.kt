@@ -4,7 +4,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.mvlchain.domain.model.MapLocation
 
 /**
- * MVVM: immutable UI state for the map feature.
+ * MVI: immutable UI state.
  */
 enum class MapBookingStep {
     PickA,
@@ -23,17 +23,17 @@ data class MapUiState(
 )
 
 /**
- * MVVM: user intents from the View (Compose) → ViewModel.
+ * MVI: user **intents** from the View (Compose) -> ViewModel. Pure data only (no callbacks).
  */
-sealed interface MapUserEvent {
-    data class CameraIdle(val center: LatLng) : MapUserEvent
-    data object PrimaryActionClicked : MapUserEvent
-    data object ErrorConsumed : MapUserEvent
-    data class MoveCameraTo(val latLng: LatLng) : MapUserEvent
+sealed interface MapIntent {
+    data class CameraIdle(val center: LatLng) : MapIntent
+    data object PrimaryActionClicked : MapIntent
+    data object ErrorConsumed : MapIntent
+    data class MoveCameraTo(val latLng: LatLng) : MapIntent
 }
 
 /**
- * MVVM: one-shot side effects from ViewModel → View (navigation, dialogs).
+ * MVI: one-shot **effects** from ViewModel -> View (navigation, etc.).
  */
 sealed interface MapEffect {
     data object NavigateToBooking : MapEffect

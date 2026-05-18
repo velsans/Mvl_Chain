@@ -33,11 +33,12 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.tadamaps.mobile.LocalViewModelFactory
 import com.tadamaps.mobile.R
 import com.mvlchain.domain.model.BookHistoryItem
 import com.mvlchain.domain.model.GeoCoordinate
@@ -202,10 +203,11 @@ internal fun HistoryScreenContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(navController: NavHostController) {
-    val viewModel: HistoryViewModel = hiltViewModel()
+    val viewModel: HistoryViewModel = viewModel(factory = LocalViewModelFactory.current)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val mapViewModel: MapViewModel = hiltViewModel(
-        navController.getBackStackEntry(Routes.Map),
+    val mapViewModel: MapViewModel = viewModel(
+        viewModelStoreOwner = navController.getBackStackEntry(Routes.Map),
+        factory = LocalViewModelFactory.current,
     )
 
     val popToMap: () -> Unit = {
@@ -216,7 +218,7 @@ fun HistoryScreen(navController: NavHostController) {
     BackHandler(onBack = popToMap)
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.onUserEvent(HistoryUserEvent.Refresh)
+        viewModel.processIntent(HistoryIntent.Refresh)
     }
 
     LaunchedEffect(Unit) {
@@ -232,14 +234,14 @@ fun HistoryScreen(navController: NavHostController) {
 
     HistoryScreenContent(
         uiState = uiState,
-        onItemClick = { viewModel.onUserEvent(HistoryUserEvent.ItemClicked(it)) },
+        onItemClick = { viewModel.processIntent(HistoryIntent.ItemClicked(it)) },
         onBackClick = popToMap,
     )
 
     val historyError = (uiState as? HistoryUiState.Error)?.message
     CommonErrorDialog(
         message = historyError,
-        onDismiss = { viewModel.onUserEvent(HistoryUserEvent.ErrorAcknowledged) },
+        onDismiss = { viewModel.processIntent(HistoryIntent.ErrorAcknowledged) },
     )
 }
 

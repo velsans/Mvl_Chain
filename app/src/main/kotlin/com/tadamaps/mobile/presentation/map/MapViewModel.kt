@@ -13,7 +13,6 @@ import com.mvlchain.domain.usecase.GetAirQualityUseCase
 import com.mvlchain.domain.usecase.ObserveNicknameUseCase
 import com.tadamaps.mobile.presentation.navigation.BookingNavigator
 import com.tadamaps.mobile.presentation.navigation.MapRestorationStore
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,12 +31,11 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
- * Map feature ViewModel — exposes [uiState], [effects], and [onUserEvent].
+ * Map feature **MVI** store — [uiState], [effects], [processIntent].
  *
  * [cameraRelocationEpoch] increments on programmatic camera moves (GPS, reset, history restore)
  * so the map picks up the target after leaving composition (e.g. Booking / Detail).
  */
-@HiltViewModel
 class MapViewModel @Inject constructor(
     private val getAirQualityUseCase: GetAirQualityUseCase,
     private val buildMapLocation: BuildMapLocationUseCase,
@@ -88,12 +86,12 @@ class MapViewModel @Inject constructor(
         _cameraRelocationEpoch.update { it + 1 }
     }
 
-    fun onUserEvent(event: MapUserEvent) {
-        when (event) {
-            is MapUserEvent.CameraIdle -> onCameraIdle(event.center)
-            MapUserEvent.PrimaryActionClicked -> onPrimaryCta()
-            MapUserEvent.ErrorConsumed -> consumeError()
-            is MapUserEvent.MoveCameraTo -> moveTo(event.latLng)
+    fun processIntent(intent: MapIntent) {
+        when (intent) {
+            is MapIntent.CameraIdle -> onCameraIdle(intent.center)
+            MapIntent.PrimaryActionClicked -> onPrimaryCta()
+            MapIntent.ErrorConsumed -> consumeError()
+            is MapIntent.MoveCameraTo -> moveTo(intent.latLng)
         }
     }
 

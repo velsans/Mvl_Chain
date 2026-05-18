@@ -27,9 +27,10 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.tadamaps.mobile.LocalViewModelFactory
 import com.tadamaps.mobile.R
 import com.mvlchain.domain.model.LocationSlot
 import com.tadamaps.mobile.presentation.common.CommonErrorDialog
@@ -158,22 +159,23 @@ internal fun LocationDetailScreenContent(
 }
 
 /**
- * MVVM: Location detail **View** — [LocationDetailViewModel], events/effects.
+ * MVI: Location detail **View** — [LocationDetailViewModel], intents/effects.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationDetailScreen(
     navController: NavHostController,
     slotArg: String,
-    viewModel: LocationDetailViewModel = hiltViewModel(),
+    viewModel: LocationDetailViewModel = viewModel(factory = LocalViewModelFactory.current),
 ) {
     val slot = when (slotArg.uppercase()) {
         "B" -> LocationSlot.B
         else -> LocationSlot.A
     }
 
-    val mapViewModel: MapViewModel = hiltViewModel(
-        navController.getBackStackEntry(Routes.Map),
+    val mapViewModel: MapViewModel = viewModel(
+        viewModelStoreOwner = navController.getBackStackEntry(Routes.Map),
+        factory = LocalViewModelFactory.current,
     )
     val mapUiState by mapViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -183,7 +185,7 @@ fun LocationDetailScreen(
     }
 
     LaunchedEffect(slot, location?.coordinate?.roundedKey()) {
-        viewModel.onUserEvent(LocationDetailUserEvent.Hydrate(slot, location))
+        viewModel.processIntent(LocationDetailIntent.Hydrate(slot, location))
     }
 
     LaunchedEffect(Unit) {
@@ -214,16 +216,16 @@ fun LocationDetailScreen(
         addressText = location?.formattedAddress?.takeIf { it.isNotBlank() },
         aqiText = location?.airQualityIndex?.toString() ?: "—",
         nickname = uiState.nickname,
-        onNicknameChange = { viewModel.onUserEvent(LocationDetailUserEvent.NicknameChanged(it)) },
+        onNicknameChange = { viewModel.processIntent(LocationDetailIntent.NicknameChanged(it)) },
         error = uiState.error,
-        onSave = { viewModel.onUserEvent(LocationDetailUserEvent.SaveClicked) },
+        onSave = { viewModel.processIntent(LocationDetailIntent.SaveClicked) },
         saveEnabled = location != null,
         onBack = leaveDetailWithoutSave,
     )
 
     CommonErrorDialog(
         message = uiState.error,
-        onDismiss = { viewModel.onUserEvent(LocationDetailUserEvent.ErrorDismissed) },
+        onDismiss = { viewModel.processIntent(LocationDetailIntent.ErrorDismissed) },
     )
 }
 

@@ -10,12 +10,9 @@ import com.mvlchain.domain.repository.GeocodingRepository
 import com.mvlchain.domain.repository.LocationPreferenceRepository
 import dagger.Binds
 import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)
 abstract class RepositoryBindModule {
 
     @Binds

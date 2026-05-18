@@ -3,7 +3,7 @@ package com.tadamaps.mobile.presentation.history
 import com.mvlchain.domain.model.BookHistoryItem
 
 /**
- * MVVM: UI state for booking history.
+ * MVI: UI state for booking history.
  */
 sealed interface HistoryUiState {
     data object Loading : HistoryUiState
@@ -16,16 +16,16 @@ sealed interface HistoryUiState {
 }
 
 /**
- * MVVM: user intents → ViewModel.
+ * MVI: user intents -> ViewModel (pure data).
  */
-sealed interface HistoryUserEvent {
-    data object Refresh : HistoryUserEvent
-    data class ItemClicked(val item: BookHistoryItem) : HistoryUserEvent
-    data object ErrorAcknowledged : HistoryUserEvent
+sealed interface HistoryIntent {
+    data object Refresh : HistoryIntent
+    data class ItemClicked(val item: BookHistoryItem) : HistoryIntent
+    data object ErrorAcknowledged : HistoryIntent
 }
 
 /**
- * MVVM: one-shot effects → View (restore map + pop stack).
+ * MVI: one-shot effects -> View (restore map + pop stack).
  */
 sealed interface HistoryEffect {
     data class RestoreBookingOnMap(val item: BookHistoryItem) : HistoryEffect

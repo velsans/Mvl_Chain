@@ -3,7 +3,6 @@ package com.tadamaps.mobile.presentation.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mvlchain.domain.usecase.GetBookingHistoryUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,9 +14,8 @@ import java.util.Calendar
 import javax.inject.Inject
 
 /**
- * MVVM: history ViewModel — [uiState], [effects], [onUserEvent].
+ * MVI: history store — [uiState], [effects], [processIntent].
  */
-@HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val historyUseCase: GetBookingHistoryUseCase,
 ) : ViewModel() {
@@ -28,19 +26,19 @@ class HistoryViewModel @Inject constructor(
     private val _effects = Channel<HistoryEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
-    fun onUserEvent(event: HistoryUserEvent) {
-        when (event) {
-            HistoryUserEvent.Refresh -> refresh()
-            HistoryUserEvent.ErrorAcknowledged -> {
+    fun processIntent(intent: HistoryIntent) {
+        when (intent) {
+            HistoryIntent.Refresh -> refresh()
+            HistoryIntent.ErrorAcknowledged -> {
                 _uiState.value = HistoryUiState.Loaded(
                     items = emptyList(),
                     totalCount = 0,
                     totalPrice = 0.0,
                 )
             }
-            is HistoryUserEvent.ItemClicked -> {
+            is HistoryIntent.ItemClicked -> {
                 viewModelScope.launch {
-                    _effects.send(HistoryEffect.RestoreBookingOnMap(event.item))
+                    _effects.send(HistoryEffect.RestoreBookingOnMap(intent.item))
                 }
             }
         }

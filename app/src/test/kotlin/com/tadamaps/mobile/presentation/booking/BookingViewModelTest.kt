@@ -63,7 +63,7 @@ class BookingViewModelTest {
 
         viewModel.uiState.test {
             assertTrue(awaitItem() is BookingUiState.Idle)
-            viewModel.onUserEvent(BookingUserEvent.StartBooking)
+            viewModel.processIntent(BookingIntent.StartBooking)
             assertTrue(awaitItem() is BookingUiState.Loading)
             assertTrue(awaitItem() is BookingUiState.Success)
             cancelAndIgnoreRemainingEvents()

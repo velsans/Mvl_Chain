@@ -4,7 +4,7 @@ import com.mvlchain.domain.model.BookingResult
 import com.mvlchain.domain.model.MapLocation
 
 /**
- * MVVM: UI state for the booking result screen.
+ * MVI: UI state for the booking result screen.
  */
 sealed interface BookingUiState {
     data object Idle : BookingUiState
@@ -25,18 +25,18 @@ sealed interface BookingUiState {
 }
 
 /**
- * MVVM: user intents → ViewModel.
+ * MVI: user intents -> ViewModel (pure data).
  */
-sealed interface BookingUserEvent {
+sealed interface BookingIntent {
     /** Loads payload from [com.tadamaps.mobile.presentation.navigation.BookingNavigator] and submits. */
-    data object StartBooking : BookingUserEvent
-    data object ViewHistoryClicked : BookingUserEvent
-    data object BackToMapClicked : BookingUserEvent
-    data object ErrorAcknowledged : BookingUserEvent
+    data object StartBooking : BookingIntent
+    data object ViewHistoryClicked : BookingIntent
+    data object BackToMapClicked : BookingIntent
+    data object ErrorAcknowledged : BookingIntent
 }
 
 /**
- * MVVM: one-shot effects → View (navigation).
+ * MVI: one-shot effects -> View (navigation).
  */
 sealed interface BookingEffect {
     data object NavigateToHistory : BookingEffect
